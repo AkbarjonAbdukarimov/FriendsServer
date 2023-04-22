@@ -33,44 +33,46 @@ const start = async () => {
     try {
         await mongoose.connect(mongURL);
         console.log("Connected to MongoDb");
+        app.use(cors({
+            origin: true,
+            credentials: true
+        }))
+        app.set('trust proxy', 1) // trust first proxy
+        app.use(session({
+            secret: 'keyboard cat',
+            resave: false,
+            cookie: { maxAge: 60000, secure: true },
+            saveUninitialized: true,
+
+        }))
+        app.use(json())
+        app.get('/', (req, res) => {
+            console.log(req.headers)
+            res.send('home ')
+        })
+        app.get('/auth', function (req, res) {
+            var result = imagekit.getAuthenticationParameters();
+            res.send(result);
+        });
+        app.use('/admin', adminRoute)
+        app.use('/cars', carsRoute)
+        app.use((err, req, res, next) => {
+            console.log(err)
+            if (err instanceof mongoose.Error.ValidationError) {
+                res.status(400).send('Validation Failed!\n Please Fill in all th fienlds');
+                return;
+            }
+            res.status(500).send(err.message)
+        })
+        app.listen(port, () => {
+            console.log(`listening on port ${port}`);
+        });
+
     } catch (err) {
         console.error("MongoDB connection Error", err);
     }
 
-    app.use(cors({
-        origin: 'http://localhost:3000',
-        credentials: true
-    }))
-    app.set('trust proxy', 1) // trust first proxy
-    app.use(session({
-        secret: 'keyboard cat',
-        resave: false,
-        cookie: { maxAge: 60000, secure: true },
-        saveUninitialized: true,
 
-    }))
-    app.use(json())
-    app.get('/', (req, res) => {
-        console.log(req.headers)
-        res.send('home ')
-    })
-    app.get('/auth', function (req, res) {
-        var result = imagekit.getAuthenticationParameters();
-        res.send(result);
-    });
-    app.use('/admin', adminRoute)
-    app.use('/cars', carsRoute)
-    app.use((err, req, res, next) => {
-        console.log(err)
-        if (err instanceof mongoose.Error.ValidationError) {
-            res.status(400).send('Validation Failed!\n Please Fill in all th fienlds');
-            return;
-        }
-        res.status(500).send(err.message)
-    })
-    app.listen(port, () => {
-        console.log(`listening on port ${port}`);
-    });
 };
 
 start();
