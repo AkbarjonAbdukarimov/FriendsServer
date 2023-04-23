@@ -39,15 +39,15 @@ router.get('/:id', async (req, res) => {
 })
 // PUT Route
 router.put('/:id', currentUser, requireAdmin, async (req, res) => {
-    const car = await Car.findByIdAndUpdate(req.params.id, {
-        brand: req.body.brand,
-        model: req.body.model,
-        category: req.body.category,
-        year: req.body.year,
-        images: req.body.images,
-        pricePreDay: req.body.price
-    }, { new: true })
+    const car = await Car.findById(req.params.id);
     if (!car) return res.status(404).send('The car with the given ID was not found.')
+    car.brand = req.body.brand;
+    car.model = req.body.model;
+    car.category = req.body.category;
+    car.year = req.body.year;
+    car.images = req.body.images;
+    car.pricePerDay = req.body.pricePerDay
+    await car.save()
     res.send(car)
 })
 
